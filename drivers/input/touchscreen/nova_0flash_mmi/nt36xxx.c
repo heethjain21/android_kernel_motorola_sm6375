@@ -82,7 +82,7 @@ enum touch_state {
 extern int nvt_mmi_init(struct nvt_ts_data *ts_data, bool enable);
 #endif
 
-#if (defined(NVT_SENSOR_EN) || defined(CONFIG_INPUT_TOUCHSCREEN_MMI)) && !defined(CONFIG_BOARD_USES_DOUBLE_TAP_CTRL)
+#if defined(CONFIG_INPUT_TOUCHSCREEN_MMI) || (defined(NVT_SENSOR_EN) && !defined(CONFIG_BOARD_USES_DOUBLE_TAP_CTRL))
 #ifdef CONFIG_HAS_WAKELOCK
 static struct wake_lock gesture_wakelock;
 #else
@@ -1270,8 +1270,13 @@ void nvt_ts_wakeup_gesture_report(uint8_t gesture_id, uint8_t *data)
 #endif
 			/* call class method */
 			ret = ts->imports->report_gesture(&event);
-			if (!ret)
+			if (!ret) {
+#ifdef CONFIG_HAS_WAKELOCK
+				wake_lock_timeout(&gesture_wakelock, msecs_to_jiffies(5000));
+#else
 				PM_WAKEUP_EVENT(gesture_wakelock, 5000);
+#endif
+			}
 		}
 #elif defined(NVT_SENSOR_EN)
 		if (!(ts->wakeable && ts->should_enable_gesture)) {
@@ -3207,17 +3212,19 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 #if WAKEUP_GESTURE
 	device_init_wakeup(&ts->input_dev->dev, 1);
 #endif
+#if defined(CONFIG_INPUT_TOUCHSCREEN_MMI) || (defined(NVT_SENSOR_EN) && !defined(CONFIG_BOARD_USES_DOUBLE_TAP_CTRL))
+#ifdef CONFIG_HAS_WAKELOCK
+	wake_lock_init(&gesture_wakelock, WAKE_LOCK_SUSPEND, "dt-wake-lock");
+#else
+	PM_WAKEUP_REGISTER(&client->dev, gesture_wakelock, "dt-wake-lock");
+	if (!gesture_wakelock) {
+		NVT_ERR("failed to allocate wakeup source\n");
+		goto err_wakeup_source_register_failed;
+	}
+#endif
+#endif
 #if defined(NVT_SENSOR_EN) && !defined(CONFIG_BOARD_USES_DOUBLE_TAP_CTRL)
 	if (!initialized_sensor) {
-#ifdef CONFIG_HAS_WAKELOCK
-		wake_lock_init(&gesture_wakelock, WAKE_LOCK_SUSPEND, "dt-wake-lock");
-#else
-		PM_WAKEUP_REGISTER(&client->dev, gesture_wakelock, "dt-wake-lock");
-		if (!gesture_wakelock) {
-			NVT_ERR("failed to allocate wakeup source\n");
-			goto err_wakeup_source_register_failed;
-		}
-#endif
 		if (!nvt_sensor_init(ts))
 			initialized_sensor = true;
 	}
