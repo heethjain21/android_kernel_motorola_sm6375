@@ -3511,7 +3511,7 @@ err_register_charger_notify_failed:
 err_charger_detection_alloc_failed:
 err_charger_notify_wq_failed:
 	free_irq(client->irq, ts);
-#if defined(NVT_SENSOR_EN) && !defined(CONFIG_BOARD_USES_DOUBLE_TAP_CTRL)
+#if defined(CONFIG_INPUT_TOUCHSCREEN_MMI) || (defined(NVT_SENSOR_EN) && !defined(CONFIG_BOARD_USES_DOUBLE_TAP_CTRL))
 #ifndef CONFIG_HAS_WAKELOCK
 err_wakeup_source_register_failed:
 #endif
