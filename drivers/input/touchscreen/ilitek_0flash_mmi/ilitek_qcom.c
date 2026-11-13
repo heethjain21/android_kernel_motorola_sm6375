@@ -528,7 +528,8 @@ static int drm_notifier_callback(struct notifier_block *self,
 }
 #endif
 #endif
-#if defined(CONFIG_DRM_MSM)
+#if defined(CONFIG_DRM_MSM) && !defined(CONFIG_DRM_PANEL) && \
+    !defined(ILI_CONFIG_PANEL_NOTIFICATIONS)
 static int drm_notifier_callback(struct notifier_block *self,
                                  unsigned long event, void *data)
 {
@@ -758,8 +759,7 @@ static void ilitek_plat_sleep_init(void)
 		if (ret)
 		ILI_ERR("[DRM]drm_panel_notifier_register fail: %d\n", ret);
 	}
-	#endif
-	#if defined(CONFIG_DRM_MSM)
+	#elif defined(CONFIG_DRM_MSM)
 	ret = msm_drm_register_client(&ilits->notifier_fb);
 	if (ret) {
 		ILI_ERR("[DRM]Unable to register fb_notifier: %d\n", ret);

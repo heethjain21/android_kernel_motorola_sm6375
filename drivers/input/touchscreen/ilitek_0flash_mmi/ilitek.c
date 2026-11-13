@@ -257,7 +257,7 @@ static int read_power_status(u8 *buf)
 	ssize_t byte = 0;
 
 	old_fs = get_fs();
-	set_fs(get_ds());
+	set_fs(KERNEL_DS);
 
 	f = filp_open(POWER_STATUS_PATH, O_RDONLY, 0);
 	if (ERR_ALLOC_MEM(f)) {

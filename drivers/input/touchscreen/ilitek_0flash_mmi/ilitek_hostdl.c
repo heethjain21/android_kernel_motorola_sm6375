@@ -238,7 +238,6 @@ int ili_fw_dump_iram_data(u32 start, u32 end, bool save)
 		}
 
 		old_fs = get_fs();
-		set_fs(get_ds());
 		set_fs(KERNEL_DS);
 		pos = 0;
 		vfs_write(f, ilits->update_buf, len, &pos);
@@ -709,7 +708,6 @@ static int ilitek_tdd_fw_hex_open(u8 op, u8 *pfw)
 
 		/* ready to map user's memory to obtain data by reading files */
 		old_fs = get_fs();
-		set_fs(get_ds());
 		set_fs(KERNEL_DS);
 		pos = 0;
 		vfs_read(f, (u8 *)ilits->tp_fw.data, fsize, &pos);
