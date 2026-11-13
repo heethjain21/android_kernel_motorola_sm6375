@@ -1069,3 +1069,4 @@ module_init(ilitek_plat_dev_init);
 module_exit(ilitek_plat_dev_exit);
 MODULE_AUTHOR("ILITEK");
 MODULE_LICENSE("GPL");
+MODULE_IMPORT_NS(ANDROID_GKI_VFS_EXPORT_ONLY);

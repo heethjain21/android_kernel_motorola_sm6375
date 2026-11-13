@@ -189,7 +189,6 @@ struct file_buffer {
 static int file_write(struct file_buffer *file, bool new_open)
 {
 	struct file *f = NULL;
-	mm_segment_t fs;
 	loff_t pos;
 
 	if (file->ptr == NULL) {
@@ -218,11 +217,8 @@ static int file_write(struct file_buffer *file, bool new_open)
 		return -1;
 	}
 
-	fs = get_fs();
-	set_fs(KERNEL_DS);
 	pos = 0;
-	vfs_write(f, file->ptr, file->flen, &pos);
-	set_fs(fs);
+	kernel_write(f, file->ptr, file->flen, &pos);
 	filp_close(f, NULL);
 	return 0;
 }
