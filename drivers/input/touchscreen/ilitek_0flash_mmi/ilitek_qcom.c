@@ -1020,8 +1020,8 @@ static int ilitek_tp_pm_resume(struct device *dev)
 static int ilitek_plat_remove(void)
 {
 	ILI_INFO("remove plat dev\n");
-#ifndef CONFIG_HAS_WAKELOCK
-	if(ilits->gesture_wakelock)
+#if defined(ILI_SENSOR_EN) && !defined(CONFIG_HAS_WAKELOCK)
+	if (ilits->gesture_wakelock)
 		PM_WAKEUP_UNREGISTER(ilits->gesture_wakelock);
 #endif
 	ili_dev_remove();
