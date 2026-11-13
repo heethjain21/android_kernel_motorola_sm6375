@@ -27,7 +27,7 @@
 #define DEF_INI_NAME_PATH		"/sdcard/mp.ini"
 #define DEF_FW_FILP_PATH		"/sdcard/ILITEK_FW"
 #define DEF_INI_REQUEST_PATH		"mp.ini"
-#define DEF_FW_REQUEST_PATH		"ilitek_fw.bin"
+#define DEF_FW_REQUEST_PATH		"ILITEK_FW"
 static unsigned char CTPM_FW_DEF[] = {
 };
 
