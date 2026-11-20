@@ -198,6 +198,7 @@ static int ilitek_tddi_fw_iram_read(u8 *buf, u32 start, int len)
 int ili_fw_dump_iram_data(u32 start, u32 end, bool save)
 {
 	struct file *f = NULL;
+	mm_segment_t old_fs;
 	loff_t pos = 0;
 	int i, ret = 0;
 	int len, tmp = debug_en;
@@ -236,8 +237,12 @@ int ili_fw_dump_iram_data(u32 start, u32 end, bool save)
 			goto out;
 		}
 
+		old_fs = get_fs();
+		set_fs(get_ds());
+		set_fs(KERNEL_DS);
 		pos = 0;
-		kernel_write(f, ilits->update_buf, len, &pos);
+		vfs_write(f, ilits->update_buf, len, &pos);
+		set_fs(old_fs);
 		filp_close(f, NULL);
 		ILI_INFO("Save iram data to %s\n", DUMP_IRAM_PATH);
 	} else {
@@ -448,7 +453,7 @@ static int ilitek_fw_calc_file_crc(u8 *pfw)
 
 static int ilitek_tddi_fw_update_block_info(u8 *pfw)
 {
-	u32 ges_info_addr = 0, ges_fw_start = 0, ges_fw_end = 0;
+	u32 ges_area_section = 0, ges_info_addr = 0, ges_fw_start = 0, ges_fw_end = 0;
 	u32 ap_end = 0, ap_len = 0;
 	u32 fw_info_addr = 0, fw_mp_ver_addr = 0;
 
@@ -468,6 +473,7 @@ static int ilitek_tddi_fw_update_block_info(u8 *pfw)
 
 	/* Parsing gesture info form AP code */
 	ges_info_addr = (fbi[AP].end + 1 - 60);
+	ges_area_section = (pfw[ges_info_addr + 3] << 24) + (pfw[ges_info_addr + 2] << 16) + (pfw[ges_info_addr + 1] << 8) + pfw[ges_info_addr];
 	fbi[GESTURE].mem_start = (pfw[ges_info_addr + 7] << 24) + (pfw[ges_info_addr + 6] << 16) + (pfw[ges_info_addr + 5] << 8) + pfw[ges_info_addr + 4];
 	ap_end = (pfw[ges_info_addr + 11] << 24) + (pfw[ges_info_addr + 10] << 16) + (pfw[ges_info_addr + 9] << 8) + pfw[ges_info_addr + 8];
 
@@ -626,6 +632,7 @@ static int ilitek_tdd_fw_hex_open(u8 op, u8 *pfw)
 	int ret =0, fsize = 0;
 	const struct firmware *fw = NULL;
 	struct file *f = NULL;
+	mm_segment_t old_fs;
 	loff_t pos = 0;
 
 	ILI_INFO("Open file method = %s, path = %s\n",
@@ -700,9 +707,13 @@ static int ilitek_tdd_fw_hex_open(u8 op, u8 *pfw)
 			}
 		}
 
-		/* Read firmware into the kernel buffer. */
+		/* ready to map user's memory to obtain data by reading files */
+		old_fs = get_fs();
+		set_fs(get_ds());
+		set_fs(KERNEL_DS);
 		pos = 0;
-		kernel_read(f, (u8 *)ilits->tp_fw.data, fsize, &pos);
+		vfs_read(f, (u8 *)ilits->tp_fw.data, fsize, &pos);
+		set_fs(old_fs);
 		filp_close(f, NULL);
 		ilits->tp_fw.size = fsize;
 		break;

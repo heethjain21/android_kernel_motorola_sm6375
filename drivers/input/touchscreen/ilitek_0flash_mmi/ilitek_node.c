@@ -189,6 +189,7 @@ struct file_buffer {
 static int file_write(struct file_buffer *file, bool new_open)
 {
 	struct file *f = NULL;
+	mm_segment_t fs;
 	loff_t pos;
 
 	if (file->ptr == NULL) {
@@ -217,8 +218,11 @@ static int file_write(struct file_buffer *file, bool new_open)
 		return -1;
 	}
 
+	fs = get_fs();
+	set_fs(KERNEL_DS);
 	pos = 0;
-	kernel_write(f, file->ptr, file->flen, &pos);
+	vfs_write(f, file->ptr, file->flen, &pos);
+	set_fs(fs);
 	filp_close(f, NULL);
 	return 0;
 }
@@ -1227,7 +1231,7 @@ int ili_get_tp_recore_data(void)
 	u8 buf[8] = {0}, record_case = 0;
 	s8 index;
 	u16 *raw = NULL, *raw_ptr = NULL, frame_len = 0;
-	u32 base_addr = 0x20000, addr, len, i, fcnt;
+	u32 base_addr = 0x20000, addr, len, *ptr, i, fcnt;
 	struct record_state record_stat;
 	bool ice = atomic_read(&ilits->ice_stat);
 
@@ -1251,6 +1255,7 @@ int ili_get_tp_recore_data(void)
 		ILI_ERR("Failed to allocate packet memory, %ld\n", PTR_ERR(raw));
 		return -1;
 	}
+	ptr = (u32*)raw;
 
 	if (!ice)
 		ili_ice_mode_ctrl(ENABLE, ON);
@@ -2527,7 +2532,7 @@ device_destroy:
 
 void ili_node_init(void)
 {
-	int i = 0;
+	int i = 0, ret = 0;
 
 	proc_dir_ilitek = proc_mkdir("ilitek", NULL);
 
@@ -2537,6 +2542,7 @@ void ili_node_init(void)
 		if (iliproc[i].node == NULL) {
 			iliproc[i].isCreated = false;
 			ILI_ERR("Failed to create %s under /proc\n", iliproc[i].name);
+			ret = -ENODEV;
 		} else {
 			iliproc[i].isCreated = true;
 			ILI_INFO("Succeed to create %s under /proc\n", iliproc[i].name);

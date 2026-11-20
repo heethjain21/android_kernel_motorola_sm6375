@@ -813,6 +813,7 @@ static int ilitek_tddi_mp_ini_parser(const char *path)
 	const struct firmware *ini = NULL;
 	struct file *f = NULL;
 	struct inode *inode;
+	mm_segment_t old_fs;
 	loff_t pos = 0;
 
 	ILI_INFO("ini file path = %s\n", path);
@@ -855,7 +856,10 @@ static int ilitek_tddi_mp_ini_parser(const char *path)
 	}
 
 	if (f != NULL) {
-		kernel_read(f, tmp, fsize, &pos);
+		old_fs = get_fs();
+		set_fs(get_ds());
+		vfs_read(f, tmp, fsize, &pos);
+		set_fs(old_fs);
 		tmp[fsize] = 0x0;
 	} else {
 		memcpy(tmp, ini->data, fsize);
@@ -2700,6 +2704,7 @@ static int mp_show_result(bool lcm_on)
 	char *csv = NULL;
 	char *ret_pass_name = NULL, *ret_fail_name = NULL;
 	struct file *f = NULL;
+	mm_segment_t fs;
 	loff_t pos;
 
 	csv = vmalloc(CSV_FILE_SIZE);
@@ -2915,8 +2920,11 @@ static int mp_show_result(bool lcm_on)
 		goto fail_open;
 	}
 
+	fs = get_fs();
+	set_fs(KERNEL_DS);
 	pos = 0;
-	kernel_write(f, csv, csv_len, &pos);
+	vfs_write(f, csv, csv_len, &pos);
+	set_fs(fs);
 	filp_close(f, NULL);
 
 	ILI_INFO("Writing Data into CSV succeed\n");

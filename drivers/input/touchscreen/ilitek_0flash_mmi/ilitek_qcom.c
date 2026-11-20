@@ -528,8 +528,7 @@ static int drm_notifier_callback(struct notifier_block *self,
 }
 #endif
 #endif
-#if defined(CONFIG_DRM_MSM) && !defined(CONFIG_DRM_PANEL) && \
-    !defined(ILI_CONFIG_PANEL_NOTIFICATIONS)
+#if defined(CONFIG_DRM_MSM)
 static int drm_notifier_callback(struct notifier_block *self,
                                  unsigned long event, void *data)
 {
@@ -759,7 +758,8 @@ static void ilitek_plat_sleep_init(void)
 		if (ret)
 		ILI_ERR("[DRM]drm_panel_notifier_register fail: %d\n", ret);
 	}
-	#elif defined(CONFIG_DRM_MSM)
+	#endif
+	#if defined(CONFIG_DRM_MSM)
 	ret = msm_drm_register_client(&ilits->notifier_fb);
 	if (ret) {
 		ILI_ERR("[DRM]Unable to register fb_notifier: %d\n", ret);
@@ -1020,8 +1020,8 @@ static int ilitek_tp_pm_resume(struct device *dev)
 static int ilitek_plat_remove(void)
 {
 	ILI_INFO("remove plat dev\n");
-#if defined(ILI_SENSOR_EN) && !defined(CONFIG_HAS_WAKELOCK)
-	if (ilits->gesture_wakelock)
+#ifndef CONFIG_HAS_WAKELOCK
+	if(ilits->gesture_wakelock)
 		PM_WAKEUP_UNREGISTER(ilits->gesture_wakelock);
 #endif
 	ili_dev_remove();
@@ -1069,4 +1069,3 @@ module_init(ilitek_plat_dev_init);
 module_exit(ilitek_plat_dev_exit);
 MODULE_AUTHOR("ILITEK");
 MODULE_LICENSE("GPL");
-MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
