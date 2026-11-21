@@ -1,0 +1,13 @@
+config TOUCHSCREEN_ILI9882_MMI
+	tristate "Motorola ILITEK host-download SPI touchscreen"
+	depends on SPI && INPUT_TOUCHSCREEN_MMI && MMI_INFO
+	help
+	  Enable the Motorola ILITEK touchscreen driver for SPI controllers
+	  that load their firmware from the host.
+
+config ILITEK_RESUME_BY_DDI
+	bool "Reload ILITEK firmware during display resume"
+	depends on TOUCHSCREEN_ILI9882_MMI
+	help
+	  Use the display-timed firmware reload sequence on panels that
+	  require the touchscreen reset and display sleep-out to be coordinated.
